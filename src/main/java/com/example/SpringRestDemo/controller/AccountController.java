@@ -9,4 +9,9 @@ public class AccountController {
     public String demo() {
         return "Hello World!";
     }
+
+     @GetMapping("/test")
+    public String test() {
+        return "Test Api";
+    }
 }
