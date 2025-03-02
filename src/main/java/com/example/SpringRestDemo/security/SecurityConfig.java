@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -36,15 +38,19 @@ public class SecurityConfig {
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
 
-
     @Bean
-    public InMemoryUserDetailsManager users() {
-        return new InMemoryUserDetailsManager(
-                User.withUsername("hruthik")
-                        .password("{noop}password")
-                        .authorities("read")
-                        .build());
+    public static PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
+
+    // @Bean
+    // public InMemoryUserDetailsManager users() {
+    //     return new InMemoryUserDetailsManager(
+    //             User.withUsername("hruthik")
+    //                     .password("{noop}password")
+    //                     .authorities("read")
+    //                     .build());
+    // }
 
     @Bean
     public AuthenticationManager authManager(UserDetailsService userDetailsService) {
@@ -66,6 +72,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/db-console/**"))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/token").permitAll()
                     .requestMatchers("/").permitAll() 
