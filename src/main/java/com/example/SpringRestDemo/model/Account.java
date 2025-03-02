@@ -1,4 +1,4 @@
-package com.example.model;
+package com.example.SpringRestDemo.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,11 +17,11 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
 
-    private String emial;
+    private String email;
 
     private String password;
 
     private String role;
-    
+
 
 }

@@ -55,6 +55,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authManager(UserDetailsService userDetailsService) {
         var authProvider = new DaoAuthenticationProvider();
+        authProvider.setPasswordEncoder(passwordEncoder());
         authProvider.setUserDetailsService(userDetailsService);
         return new ProviderManager(authProvider);
     }
@@ -78,6 +79,7 @@ public class SecurityConfig {
                     .requestMatchers("/").permitAll() 
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers("/db-console/**").permitAll()
                     .requestMatchers("/test").authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.service.AccountService;
-import com.example.model.Account;
 
 @Component
 public class SeedData implements CommandLineRunner {
@@ -18,12 +18,12 @@ public class SeedData implements CommandLineRunner {
         Account account01 = new Account();
         Account account02 = new Account();
 
-        account01.setEmial("user@user.com");
+        account01.setEmail("user@user.com");
         account01.setPassword("password");
         account01.setRole("ROLE_USER");
         accountService.save(account01);
 
-        account02.setEmial("admin@admin");
+        account02.setEmail("admin@admin");
         account02.setPassword("password");
         account02.setRole("ROLE_ADMIN");
         accountService.save(account02);
