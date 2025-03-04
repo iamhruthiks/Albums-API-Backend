@@ -74,9 +74,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers("/db-console/**"))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/token").permitAll()
-                    .requestMatchers("/").permitAll() 
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/").permitAll() // /users/add
+                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers("/db-console/**").permitAll()
