@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.payload.auth.AccountDTO;
 import com.example.SpringRestDemo.payload.auth.AccountViewDTO;
+import com.example.SpringRestDemo.payload.auth.AuthoritiesDTO;
 import com.example.SpringRestDemo.payload.auth.PasswordDTO;
 import com.example.SpringRestDemo.payload.auth.ProfileDTO;
 import com.example.SpringRestDemo.payload.auth.TokenDTO;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.Id;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +35,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -104,7 +107,7 @@ public class AuthController {
     }
 
     @GetMapping(value = "/profile", produces = "application/json")
-    @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "200", description = "Update Password")
     @ApiResponse(responseCode = "401", description = "Token missing")
     @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "View Profile")
@@ -134,6 +137,25 @@ public class AuthController {
             account.setPassword(passwordDTO.getPassword());
             accountService.save(account);
 
+            AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(),
+                    account.getAuthorities());
+            return accountViewDTO;
+        }
+        return null;
+    }
+    
+    @PostMapping(value = "/users/update-authorities/{user_id}", produces = "application/json",consumes = "application/json")
+    @ApiResponse(responseCode = "200", description = "Update aothorities")
+    @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "403", description = "Token Error")
+    @Operation(summary = "Update authorities")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public AccountViewDTO update_auth(@Valid @RequestBody AuthoritiesDTO authoritiesDTO, @PathVariable long user_id) {
+        Optional<Account> optionalAccount = accountService.findById(user_id);
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            account.setAuthorities(authoritiesDTO.getAuthorities());
+            accountService.save(account);
             AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(), account.getAuthorities());
             return accountViewDTO;
         }

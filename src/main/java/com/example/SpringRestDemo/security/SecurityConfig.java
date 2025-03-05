@@ -79,6 +79,7 @@ public class SecurityConfig {
                     .requestMatchers("/auth/token").permitAll()
                     .requestMatchers("/auth/users/add").permitAll()
                     .requestMatchers("/auth/users").hasAnyAuthority("SCOPE_ADMIN")
+                    .requestMatchers("/auth/users/update-authorities/**").hasAnyAuthority("SCOPE_ADMIN")
                     .requestMatchers("/auth/profile").authenticated()
                     .requestMatchers("/auth/profile/update-password").authenticated()
                     .requestMatchers("/swagger-ui/**").permitAll()
