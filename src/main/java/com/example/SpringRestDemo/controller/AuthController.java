@@ -115,12 +115,9 @@ public class AuthController {
     public ProfileDTO profile(Authentication authentication) {
         String email = authentication.getName();
         Optional<Account> optionalAccount = accountService.findByEmail(email);
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
-            ProfileDTO profileDTO = new ProfileDTO(account.getId(), account.getEmail(), account.getAuthorities());
-            return profileDTO;
-        }
-        return null;
+        Account account = optionalAccount.get();
+        ProfileDTO profileDTO = new ProfileDTO(account.getId(), account.getEmail(), account.getAuthorities());
+        return profileDTO;
     }
 
     @PutMapping(value = "/profile/update-password", produces = "application/json",consumes = "application/json")
@@ -132,33 +129,30 @@ public class AuthController {
     public AccountViewDTO update_password(@Valid @RequestBody PasswordDTO passwordDTO, Authentication authentication) {
         String email = authentication.getName();
         Optional<Account> optionalAccount = accountService.findByEmail(email);
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
-            account.setPassword(passwordDTO.getPassword());
-            accountService.save(account);
-
-            AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(),
-                    account.getAuthorities());
-            return accountViewDTO;
-        }
-        return null;
+        Account account = optionalAccount.get();
+        account.setPassword(passwordDTO.getPassword());
+        accountService.save(account);
+        AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(),
+        account.getAuthorities());
+        return accountViewDTO;
     }
     
-    @PostMapping(value = "/users/update-authorities/{user_id}", produces = "application/json",consumes = "application/json")
-    @ApiResponse(responseCode = "200", description = "Update aothorities")
+    @PostMapping(value = "/users/{user_id}/update-authorities", produces = "application/json",consumes = "application/json")
+    @ApiResponse(responseCode = "200", description = "Update authorities")
     @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "400", description = "Invalid user")
     @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "Update authorities")
     @SecurityRequirement(name = "springrestful-demo-api")
-    public AccountViewDTO update_auth(@Valid @RequestBody AuthoritiesDTO authoritiesDTO, @PathVariable long user_id) {
+    public ResponseEntity<AccountViewDTO> update_auth(@Valid @RequestBody AuthoritiesDTO authoritiesDTO, @PathVariable long user_id) {
         Optional<Account> optionalAccount = accountService.findById(user_id);
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             account.setAuthorities(authoritiesDTO.getAuthorities());
             accountService.save(account);
             AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(), account.getAuthorities());
-            return accountViewDTO;
+            return ResponseEntity.ok(accountViewDTO);
         }
-        return null;
+        return new ResponseEntity<AccountViewDTO>(new AccountViewDTO(), HttpStatus.BAD_REQUEST);
     }
 }
