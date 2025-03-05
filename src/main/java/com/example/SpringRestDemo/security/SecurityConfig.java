@@ -8,7 +8,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +15,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.nimbusds.jose.JOSEException;
@@ -76,13 +74,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.ignoringRequestMatchers("/db-console/**"))
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/").permitAll()
-                    .requestMatchers("/auth/token").permitAll()
-                    .requestMatchers("/auth/users/add").permitAll()
-                    .requestMatchers("/auth/users").hasAnyAuthority("SCOPE_ADMIN")
-                    .requestMatchers("/auth/users/{user_id}/update-authorities").hasAnyAuthority("SCOPE_ADMIN")
-                    .requestMatchers("/auth/profile").authenticated()
-                    .requestMatchers("/auth/profile/update-password").authenticated()
-                    .requestMatchers("/auth/profile/delete").authenticated()
+                    .requestMatchers("/api/v1/auth/token").permitAll()
+                    .requestMatchers("/api/v1/auth/users/add").permitAll()
+                    .requestMatchers("/api/v1/auth/users").hasAnyAuthority("SCOPE_ADMIN")
+                    .requestMatchers("/api/v1/auth/users/{user_id}/update-authorities").hasAnyAuthority("SCOPE_ADMIN")
+                    .requestMatchers("/api/v1/auth/profile").authenticated()
+                    .requestMatchers("/api/v1/auth/profile/update-password").authenticated()
+                    .requestMatchers("/api/v1/auth/profile/delete").authenticated()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers("/db-console/**").permitAll()

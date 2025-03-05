@@ -19,7 +19,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.Id;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,12 +40,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @Tag(name = "Auth Controller", description = "Controller for Account management")
 @Slf4j
 public class AuthController {
@@ -108,7 +106,7 @@ public class AuthController {
     }
 
     @GetMapping(value = "/profile", produces = "application/json")
-    @ApiResponse(responseCode = "200", description = "Update Password")
+    @ApiResponse(responseCode = "200", description = "View Profile")
     @ApiResponse(responseCode = "401", description = "Token missing")
     @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "View Profile")
@@ -122,7 +120,7 @@ public class AuthController {
     }
 
     @PutMapping(value = "/profile/update-password", produces = "application/json",consumes = "application/json")
-    @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "200", description = "Update Password")
     @ApiResponse(responseCode = "401", description = "Token missing")
     @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "Update Profile")
@@ -160,7 +158,7 @@ public class AuthController {
     }
 
     @DeleteMapping(value = "/profile/delete")
-    @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "200", description = "Delete user")
     @ApiResponse(responseCode = "401", description = "Token missing")
     @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "Delete Profile")
