@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.payload.auth.AccountDTO;
 import com.example.SpringRestDemo.payload.auth.AccountViewDTO;
+import com.example.SpringRestDemo.payload.auth.PasswordDTO;
 import com.example.SpringRestDemo.payload.auth.ProfileDTO;
 import com.example.SpringRestDemo.payload.auth.TokenDTO;
 import com.example.SpringRestDemo.payload.auth.UserLoginDTO;
@@ -33,6 +34,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -114,6 +116,26 @@ public class AuthController {
             Account account = optionalAccount.get();
             ProfileDTO profileDTO = new ProfileDTO(account.getId(), account.getEmail(), account.getAuthorities());
             return profileDTO;
+        }
+        return null;
+    }
+
+    @PutMapping(value = "/profile/update-password", produces = "application/json",consumes = "application/json")
+    @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "403", description = "Token Error")
+    @Operation(summary = "Update Profile")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public AccountViewDTO update_password(@Valid @RequestBody PasswordDTO passwordDTO, Authentication authentication) {
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            account.setPassword(passwordDTO.getPassword());
+            accountService.save(account);
+
+            AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(), account.getAuthorities());
+            return accountViewDTO;
         }
         return null;
     }
