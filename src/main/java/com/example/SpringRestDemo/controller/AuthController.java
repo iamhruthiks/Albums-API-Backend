@@ -11,7 +11,10 @@ import com.example.SpringRestDemo.service.TokenService;
 import com.example.SpringRestDemo.util.constants.AccountError;
 import com.example.SpringRestDemo.util.constants.AccountSuccess;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +48,7 @@ public class AuthController {
 
     @PostMapping("/token")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<TokenDTO> token(@RequestBody UserLoginDTO userLogin) throws AuthenticationException {
+    public ResponseEntity<TokenDTO> token(@Valid @RequestBody UserLoginDTO userLogin) throws AuthenticationException {
         try {
             Authentication authentication = authenticationManager
                     .authenticate(
@@ -57,14 +60,17 @@ public class AuthController {
         }
     }
     
-    @PostMapping("/users/add")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<String>addUser(@RequestBody AccountDTO accountDTO) {
+    @PostMapping(value = "/users/add", consumes = "application/json", produces = "application/json")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Add a new User")
+    @ApiResponse(responseCode = "400", description = "Please enter a valid email and Password length between 6 to 20 characters")
+    @ApiResponse(responseCode = "200", description = "Account added")
+    public ResponseEntity<String>addUser(@Valid @RequestBody AccountDTO accountDTO) {
         try {
             Account account = new Account();
             account.setEmail(accountDTO.getEmail());
             account.setPassword(accountDTO.getPassword());
-            account.setRole("ROLE_uSER");
+            account.setRole("ROLE_USER");
             accountService.save(account);
             return ResponseEntity.ok(AccountSuccess.ACCOUNT_ADDED.toString());
             

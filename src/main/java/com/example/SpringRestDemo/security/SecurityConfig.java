@@ -75,9 +75,8 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers("/db-console/**"))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/").permitAll() // /users/add
-                    .requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/").permitAll()
+                    .requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers("/db-console/**").permitAll()
