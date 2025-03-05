@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.repository.AccountRepository;
+import com.example.SpringRestDemo.util.constants.Authority;
 
 @Service
 public class AccountService implements UserDetailsService {
@@ -27,8 +28,8 @@ public class AccountService implements UserDetailsService {
 
     public Account save(Account account) {
         account.setPassword(passwordEncoder.encode(account.getPassword()));
-        if (account.getRole() == null) {
-            account.setRole("ROLE_USER");
+        if (account.getAuthorities() == null) {
+            account.setAuthorities(Authority.USER.toString());
         }
         return accountRepository.save(account);
     }
@@ -45,7 +46,7 @@ public class AccountService implements UserDetailsService {
         }
         Account account = optionalAccount.get();
         List<GrantedAuthority> grantedAuthority = new ArrayList<>();
-        grantedAuthority.add(new SimpleGrantedAuthority(account.getRole()));
+        grantedAuthority.add(new SimpleGrantedAuthority(account.getAuthorities()));
         return new User(account.getEmail(),account.getPassword(),grantedAuthority);
     }
 }

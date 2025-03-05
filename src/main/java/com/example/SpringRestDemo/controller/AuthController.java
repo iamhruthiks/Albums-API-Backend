@@ -94,7 +94,7 @@ public class AuthController {
     public List<AccountViewDTO> Users() {
         List<AccountViewDTO> accounts = new ArrayList<>();
         for (Account account : accountService.findall()) {
-            accounts.add(new AccountViewDTO(account.getId(),account.getEmail(),account.getRole()));
+            accounts.add(new AccountViewDTO(account.getId(),account.getEmail(),account.getAuthorities()));
         }
         return accounts;
     }
