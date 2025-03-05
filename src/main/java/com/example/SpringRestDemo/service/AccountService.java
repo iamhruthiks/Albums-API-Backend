@@ -34,8 +34,12 @@ public class AccountService implements UserDetailsService {
         return accountRepository.save(account);
     }
 
-    public List<Account> findall(){
+    public List<Account> findall() {
         return accountRepository.findAll();
+    }
+    
+    public Optional<Account> findByEmail(String email) {
+        return accountRepository.findByEmail(email);
     }
 
     @Override

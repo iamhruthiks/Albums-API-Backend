@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.payload.auth.AccountDTO;
 import com.example.SpringRestDemo.payload.auth.AccountViewDTO;
+import com.example.SpringRestDemo.payload.auth.ProfileDTO;
 import com.example.SpringRestDemo.payload.auth.TokenDTO;
 import com.example.SpringRestDemo.payload.auth.UserLoginDTO;
 import com.example.SpringRestDemo.service.AccountService;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -94,9 +96,25 @@ public class AuthController {
     public List<AccountViewDTO> Users() {
         List<AccountViewDTO> accounts = new ArrayList<>();
         for (Account account : accountService.findall()) {
-            accounts.add(new AccountViewDTO(account.getId(),account.getEmail(),account.getAuthorities()));
+            accounts.add(new AccountViewDTO(account.getId(), account.getEmail(), account.getAuthorities()));
         }
         return accounts;
     }
 
+    @GetMapping(value = "/profile", produces = "application/json")
+    @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "403", description = "Token Error")
+    @Operation(summary = "View Profile")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public ProfileDTO profile(Authentication authentication) {
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            ProfileDTO profileDTO = new ProfileDTO(account.getId(), account.getEmail(), account.getAuthorities());
+            return profileDTO;
+        }
+        return null;
+    }
 }

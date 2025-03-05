@@ -79,6 +79,7 @@ public class SecurityConfig {
                     .requestMatchers("/auth/token").permitAll()
                     .requestMatchers("/auth/users/add").permitAll()
                     .requestMatchers("/auth/users").hasAnyAuthority("SCOPE_ADMIN")
+                    .requestMatchers("/auth/profile").authenticated()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers("/db-console/**").permitAll()
