@@ -14,6 +14,7 @@ import com.example.SpringRestDemo.util.constants.AccountSuccess;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +87,10 @@ public class AuthController {
 
     @GetMapping(value = "/users", produces = "application/json")
     @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "List  users api")
+    @SecurityRequirement(name = "springrestful-demo-api")
     public List<AccountViewDTO> Users() {
         List<AccountViewDTO> accounts = new ArrayList<>();
         for (Account account : accountService.findall()) {
