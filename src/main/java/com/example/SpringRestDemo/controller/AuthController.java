@@ -34,6 +34,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -133,7 +134,7 @@ public class AuthController {
         account.setPassword(passwordDTO.getPassword());
         accountService.save(account);
         AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(),
-        account.getAuthorities());
+                account.getAuthorities());
         return accountViewDTO;
     }
     
@@ -144,15 +145,35 @@ public class AuthController {
     @ApiResponse(responseCode = "403", description = "Token Error")
     @Operation(summary = "Update authorities")
     @SecurityRequirement(name = "springrestful-demo-api")
-    public ResponseEntity<AccountViewDTO> update_auth(@Valid @RequestBody AuthoritiesDTO authoritiesDTO, @PathVariable long user_id) {
+    public ResponseEntity<AccountViewDTO> update_auth(@Valid @RequestBody AuthoritiesDTO authoritiesDTO,
+            @PathVariable long user_id) {
         Optional<Account> optionalAccount = accountService.findById(user_id);
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             account.setAuthorities(authoritiesDTO.getAuthorities());
             accountService.save(account);
-            AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(), account.getAuthorities());
+            AccountViewDTO accountViewDTO = new AccountViewDTO(account.getId(), account.getEmail(),
+                    account.getAuthorities());
             return ResponseEntity.ok(accountViewDTO);
         }
         return new ResponseEntity<AccountViewDTO>(new AccountViewDTO(), HttpStatus.BAD_REQUEST);
     }
+
+    @DeleteMapping(value = "/profile/delete")
+    @ApiResponse(responseCode = "200", description = "List of users")
+    @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "403", description = "Token Error")
+    @Operation(summary = "Delete Profile")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public ResponseEntity<String> delete_profile(Authentication authentication) {
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        if (optionalAccount.isPresent()) {
+            accountService.deleteById(optionalAccount.get().getId());
+            return ResponseEntity.ok("User deleted");
+        }
+        return new ResponseEntity<String>("Bad request", HttpStatus.BAD_REQUEST);
+    }
+
+    
 }
