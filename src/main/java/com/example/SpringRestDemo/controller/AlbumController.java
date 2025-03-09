@@ -7,10 +7,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.model.Album;
+import com.example.SpringRestDemo.model.Photo;
 import com.example.SpringRestDemo.payload.auth.album.AlbumPayloadDTO;
 import com.example.SpringRestDemo.payload.auth.album.AlbumViewDTO;
 import com.example.SpringRestDemo.service.AccountService;
 import com.example.SpringRestDemo.service.AlbumService;
+import com.example.SpringRestDemo.service.PhotoService;
 import com.example.SpringRestDemo.util.constants.AlbumError;
 import com.example.SpringRestDemo.util.constants.AppUtils.AppUtil;
 
@@ -44,7 +46,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 
 
 @RestController
-@RequestMapping("/api/v1/albums")
+@RequestMapping("/api/v1")
+
 @Tag(name = "Album Controller", description = "Controller for album and photo management")
 @Slf4j
 public class AlbumController {
@@ -55,7 +58,10 @@ public class AlbumController {
     @Autowired
     private AlbumService albumService;
 
-    @PostMapping(value = "/add", consumes = "application/json", produces = "application/json")
+    @Autowired
+    private PhotoService photoService;
+
+    @PostMapping(value = "albums/add", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponse(responseCode = "400", description = "Please add valid name a description")
     @ApiResponse(responseCode = "200", description = "Album added")
@@ -81,7 +87,7 @@ public class AlbumController {
         }
     }
 
-    @GetMapping(value = "/", produces = "application/json")
+    @GetMapping(value = "/albums", produces = "application/json")
     @ApiResponse(responseCode = "400", description = "Please add valid name a description")
     @ApiResponse(responseCode = "200", description = "Albums")
     @Operation(summary = "List album api")
@@ -97,7 +103,7 @@ public class AlbumController {
         return albums;
     }
     
-    @PostMapping(value = "/{album_id}/upload-photos", consumes = { "multipart/form-data" })
+    @PostMapping(value = "albums/{album_id}/upload-photos", consumes = { "multipart/form-data" })
     @ApiResponse(responseCode = "400", description = "Please check the payload or token")
     @ApiResponse(responseCode = "404", description = "album id not found")
     @ApiResponse(responseCode = "200", description = "Uploaded")
@@ -112,7 +118,7 @@ public class AlbumController {
         if (optionalAlbum.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-        Album album = optionalAlbum.get();
+        Album album;
         if (optionalAlbum.isPresent()) {
             album = optionalAlbum.get();
             if (account.getId() != album.getAccount().getId()) {
@@ -143,14 +149,22 @@ public class AlbumController {
                     String absolute_fileLocation = AppUtil.get_photo_upload_path(final_photo_name, album_id);
                     Path path = Paths.get(absolute_fileLocation);
                     Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
+                    Photo photo = new Photo();
+                    photo.setName(fileName);
+                    photo.setFileName(final_photo_name);
+                    photo.setOriginalFileName(fileName);
+                    photo.setAlbum(album);
+                    photoService.save(photo);
+                    
                 } catch (Exception e) {
                     // TODO: handle exception
                 }
+            } else {
+                fileNamesWithError.add(file.getOriginalFilename());
             }
         });
 
-        return null;
+        return ResponseEntity.ok(fileNamesWithSuccess);
     }
     
 }

@@ -43,6 +43,5 @@ db/
 appLog.log
 
 ### uploads ###
-
-resources/static/uploads/
+src/main/resources/static/uploads
 
