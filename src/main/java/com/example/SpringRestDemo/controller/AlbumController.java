@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -47,8 +52,9 @@ public class AlbumController {
     @ApiResponse(responseCode = "200", description = "Album added")
     @Operation(summary = "Add an Album")
     @SecurityRequirement(name = "springrestful-demo-api")
-    public ResponseEntity<AlbumViewDTO> addAlbum(@Valid @RequestBody AlbumPayloadDTO albumPayloadDTO, Authentication authentication) {
-      try {
+    public ResponseEntity<AlbumViewDTO> addAlbum(@Valid @RequestBody AlbumPayloadDTO albumPayloadDTO,
+            Authentication authentication) {
+        try {
             Album album = new Album();
             album.setName(albumPayloadDTO.getName());
             album.setDescription(albumPayloadDTO.getDescription());
@@ -61,8 +67,24 @@ public class AlbumController {
             return ResponseEntity.ok(albumViewDTO);
 
         } catch (Exception e) {
-            log.debug(AlbumError.ADD_ALBUM_ERROR.toString() + ": "+ e.getMessage());
+            log.debug(AlbumError.ADD_ALBUM_ERROR.toString() + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+    }
+
+    @GetMapping(value = "/albums", produces = "application/json")
+    @ApiResponse(responseCode = "400", description = "Please add valid name a description")
+    @ApiResponse(responseCode = "200", description = "Album added")
+    @Operation(summary = "List album api")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public List<AlbumViewDTO> albums( Authentication authentication) {
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        Account account = optionalAccount.get();
+        List<AlbumViewDTO> albums = new ArrayList<>();
+        for (Album album : albumService.findByAccount_id(account.getId())) {
+            albums.add(new AlbumViewDTO(album.getId(), album.getName(), album.getDescription()));
+        }
+        return albums;
     }
 }
