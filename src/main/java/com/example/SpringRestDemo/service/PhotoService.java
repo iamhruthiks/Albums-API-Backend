@@ -23,6 +23,10 @@ public class PhotoService {
         return photoRepository.findById(id);
     }
 
+    public void delete(Photo photo){
+        photoRepository.delete(photo);
+    }
+
     public List<Photo> findByAlbumId(long id) {
         return photoRepository.findByAlbum_id(id);
     }
