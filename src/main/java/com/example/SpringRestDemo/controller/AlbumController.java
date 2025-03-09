@@ -204,47 +204,80 @@ public class AlbumController {
     @SecurityRequirement(name = "springrestful-demo-api")
     public ResponseEntity<?> downloadPhoto(@PathVariable("album_id") long album_id,
             @PathVariable("photo_id") long photo_id, Authentication authentication) {
-           String email = authentication.getName();
-                Optional<Account> optionalAccount = accountService.findByEmail(email);
-                Account account = optionalAccount.get();
-        
-                Optional<Album> optionalAlbum = albumService.findById(album_id);
-                if (optionalAlbum.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-                }
-                Album album;
-                if (optionalAlbum.isPresent()) {
-                    album = optionalAlbum.get();
-                    if (account.getId() != album.getAccount().getId()) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-                    }
-                } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-                }
-                Optional<Photo> optionalPhoto = photoService.findById(photo_id);
-                if (optionalPhoto.isPresent()) {
-                    Photo photo = optionalPhoto.get();
-                    Resource resource = null;
-                    try {
-                        resource = AppUtil.getFileAsResource(album_id, PHOTOS_FOLDER_NAME, photo.getFileName());
-                    } catch (IOException e) {
-                        return ResponseEntity.internalServerError().build();
-                    }
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        Account account = optionalAccount.get();
 
-                    if (resource == null) {
-                        return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
-                    }
+        Optional<Album> optionalAlbum = albumService.findById(album_id);
+        if (optionalAlbum.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        Album album;
+        if (optionalAlbum.isPresent()) {
+            album = optionalAlbum.get();
+            if (account.getId() != album.getAccount().getId()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        Optional<Photo> optionalPhoto = photoService.findById(photo_id);
+        if (optionalPhoto.isPresent()) {
+            Photo photo = optionalPhoto.get();
+            Resource resource = null;
+            try {
+                resource = AppUtil.getFileAsResource(album_id, PHOTOS_FOLDER_NAME, photo.getFileName());
+            } catch (IOException e) {
+                return ResponseEntity.internalServerError().build();
+            }
 
-                    String contentType = "application/octet-stream";
-                    String headerValue = "attachment; filename=\"" + photo.getOriginalFileName() + "\"";
+            if (resource == null) {
+                return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
+            }
 
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.parseMediaType(contentType))
-                            .header(HttpHeaders.CONTENT_DISPOSITION, headerValue)
-                            .body(resource);
-                } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-                }
+            String contentType = "application/octet-stream";
+            String headerValue = "attachment; filename=\"" + photo.getOriginalFileName() + "\"";
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, headerValue)
+                    .body(resource);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
+
+    @GetMapping(value = "/albums/{album_id}", produces = "application/json")
+    @ApiResponse(responseCode = "200", description = "List of albums")
+    @ApiResponse(responseCode = "401", description = "Token missing")
+    @ApiResponse(responseCode = "403", description = "Token Error")
+    @Operation(summary = "List album by album ID")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public ResponseEntity<AlbumViewDTO> albums_by_id(@PathVariable long album_id, Authentication authentication) {
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        Account account = optionalAccount.get();
+        Optional<Album> optionalAlbum = albumService.findById(album_id);
+        Album album;
+        if (optionalAlbum.isPresent()) {
+            album = optionalAlbum.get();
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (account.getId() != album.getAccount().getId()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+
+        List<PhotoDTO> photos = new ArrayList<>();
+        for (Photo photo : photoService.findByAlbumId(album.getId())) {
+            String link = "/albums/"+album.getId()+"/photos/"+photo.getId()+"/download-photo";
+            photos.add(new PhotoDTO(photo.getId(), photo.getName(), photo.getDescription(), photo.getFileName(), link));
+        }
+
+        AlbumViewDTO albumViewDTO = new AlbumViewDTO(album.getId(), album.getName(), album.getDescription(), photos);
+
+        return ResponseEntity.ok(albumViewDTO);
+    }
+   
     
 }
