@@ -11,6 +11,8 @@ import com.example.SpringRestDemo.model.Photo;
 import com.example.SpringRestDemo.payload.auth.album.AlbumPayloadDTO;
 import com.example.SpringRestDemo.payload.auth.album.AlbumViewDTO;
 import com.example.SpringRestDemo.payload.auth.album.PhotoDTO;
+import com.example.SpringRestDemo.payload.auth.album.PhotoPayloadDTO;
+import com.example.SpringRestDemo.payload.auth.album.PhotoViewDTO;
 import com.example.SpringRestDemo.service.AccountService;
 import com.example.SpringRestDemo.service.AlbumService;
 import com.example.SpringRestDemo.service.PhotoService;
@@ -293,7 +295,7 @@ public class AlbumController {
             String email = authentication.getName();
             Optional<Account> optionalAccount = accountService.findByEmail(email);
             Account account = optionalAccount.get();
-    
+
             Optional<Album> optionaAlbum = albumService.findById(album_id);
             Album album;
             if (optionaAlbum.isPresent()) {
@@ -305,24 +307,68 @@ public class AlbumController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
 
-
             album.setName(albumPayloadDTO.getName());
             album.setDescription(albumPayloadDTO.getDescription());
             album = albumService.save(album);
             List<PhotoDTO> photos = new ArrayList<>();
-            for(Photo photo: photoService.findByAlbumId(album.getId())){
-                String link = "/albums/"+album.getId()+"/photos/"+photo.getId()+"/download-photo";
-                photos.add(new PhotoDTO(photo.getId(), photo.getName(), photo.getDescription(), 
-                photo.getFileName(), link));
+            for (Photo photo : photoService.findByAlbumId(album.getId())) {
+                String link = "/albums/" + album.getId() + "/photos/" + photo.getId() + "/download-photo";
+                photos.add(new PhotoDTO(photo.getId(), photo.getName(), photo.getDescription(),
+                        photo.getFileName(), link));
 
             }
-            AlbumViewDTO albumViewDTO = new AlbumViewDTO(album.getId(), album.getName(), album.getDescription(), photos);
+            AlbumViewDTO albumViewDTO = new AlbumViewDTO(album.getId(), album.getName(), album.getDescription(),
+                    photos);
             return ResponseEntity.ok(albumViewDTO);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-   
+    
+    @PutMapping(value = "albums/{album_id}/photos/{photo_id}/update", consumes = "application/json", produces = "application/json")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponse(responseCode = "400", description = "Please add valid name a description")
+    @ApiResponse(responseCode = "204", description = "Album update")
+    @Operation(summary = "Update a photo")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public ResponseEntity<PhotoViewDTO> update_photo(@Valid @RequestBody PhotoPayloadDTO photoPayloadDTO,
+            @PathVariable long album_id, @PathVariable long photo_id,Authentication authentication) {
+        try {
+
+            String email = authentication.getName();
+            Optional<Account> optionalAccount = accountService.findByEmail(email);
+            Account account = optionalAccount.get();
+    
+            Optional<Album> optionaAlbum = albumService.findById(album_id);
+            Album album;
+            if (optionaAlbum.isPresent()) {
+                album = optionaAlbum.get();
+                if (account.getId() != album.getAccount().getId()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            Optional<Photo> optionalPhoto = photoService.findById(photo_id);
+            if(optionalPhoto.isPresent()){
+                Photo photo = optionalPhoto.get();
+                if (photo.getAlbum().getId() != album_id) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                }
+                photo.setName(photoPayloadDTO.getName());
+                photo.setDescription(photoPayloadDTO.getDescription());
+                photoService.save(photo);
+                PhotoViewDTO photoViewDTO = new PhotoViewDTO(photo.getId(), photoPayloadDTO.getName(), photoPayloadDTO.getDescription());
+                return ResponseEntity.ok(photoViewDTO);
+            }else{
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+
+        } catch (Exception e) {
+            
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
     
 }
