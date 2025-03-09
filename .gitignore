@@ -42,3 +42,7 @@ db/
 ### app log ###
 appLog.log
 
+### uploads ###
+
+resources/static/uploads/
+

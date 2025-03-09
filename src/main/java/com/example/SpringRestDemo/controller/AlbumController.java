@@ -12,6 +12,7 @@ import com.example.SpringRestDemo.payload.auth.album.AlbumViewDTO;
 import com.example.SpringRestDemo.service.AccountService;
 import com.example.SpringRestDemo.service.AlbumService;
 import com.example.SpringRestDemo.util.constants.AlbumError;
+import com.example.SpringRestDemo.util.constants.AppUtils.AppUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,11 +21,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +38,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestPart;
 
 
@@ -91,17 +97,60 @@ public class AlbumController {
         return albums;
     }
     
-    @PostMapping(value = "/photos", consumes = { "multipart/form-data" })
-    @ApiResponse(responseCode = "400", description = "Please add valid name a description")
+    @PostMapping(value = "/{album_id}/upload-photos", consumes = { "multipart/form-data" })
+    @ApiResponse(responseCode = "400", description = "Please check the payload or token")
+    @ApiResponse(responseCode = "404", description = "album id not found")
     @ApiResponse(responseCode = "200", description = "Uploaded")
     @Operation(summary = "Upload Photo into album")
     @SecurityRequirement(name = "springrestful-demo-api")
-    public List<String> photos(@RequestPart(required = true) MultipartFile[] files) {
-        List<String> fileNames = new ArrayList();
+    public ResponseEntity<List<String>> photos(@RequestPart(required = true) MultipartFile[] files, @PathVariable long album_id,
+            Authentication authentication) {
+        String email = authentication.getName();
+        Optional<Account> optionalAccount = accountService.findByEmail(email);
+        Account account = optionalAccount.get();
+        Optional<Album> optionalAlbum = albumService.findById(album_id);
+        if (optionalAlbum.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        Album album = optionalAlbum.get();
+        if (optionalAlbum.isPresent()) {
+            album = optionalAlbum.get();
+            if (account.getId() != album.getAccount().getId()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        
+        List<String> fileNamesWithSuccess = new ArrayList();
+        List<String> fileNamesWithError = new ArrayList();
+
         Arrays.asList(files).stream().forEach(file -> {
-            fileNames.add(file.getOriginalFilename());
+            String contentType = file.getContentType();
+             if(contentType.equals("image/png")
+            || contentType.equals("image/jpg")
+            || contentType.equals("image/jpeg")) {
+                fileNamesWithSuccess.add(file.getOriginalFilename());
+
+                int length = 10;
+                boolean useLetters = true;
+                boolean useNumbers = true;
+
+                try {
+                    String fileName = file.getOriginalFilename();
+                    String generatedString = RandomStringUtils.random(length, useLetters, useNumbers);
+                    String final_photo_name = generatedString + fileName;
+                    String absolute_fileLocation = AppUtil.get_photo_upload_path(final_photo_name, album_id);
+                    Path path = Paths.get(absolute_fileLocation);
+                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+            }
         });
-        return fileNames;
+
+        return null;
     }
     
 }
