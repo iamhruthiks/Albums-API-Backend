@@ -23,8 +23,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.MediaType;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import org.springframework.http.HttpHeaders;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +42,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -124,9 +128,6 @@ public class AlbumController {
         Optional<Account> optionalAccount = accountService.findByEmail(email);
         Account account = optionalAccount.get();
         Optional<Album> optionalAlbum = albumService.findById(album_id);
-        if (optionalAlbum.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
         Album album;
         if (optionalAlbum.isPresent()) {
             album = optionalAlbum.get();
@@ -136,15 +137,15 @@ public class AlbumController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        
+
         List<String> fileNamesWithSuccess = new ArrayList();
         List<String> fileNamesWithError = new ArrayList();
 
         Arrays.asList(files).stream().forEach(file -> {
             String contentType = file.getContentType();
-             if(contentType.equals("image/png")
-            || contentType.equals("image/jpg")
-            || contentType.equals("image/jpeg")) {
+            if (contentType.equals("image/png")
+                    || contentType.equals("image/jpg")
+                    || contentType.equals("image/jpeg")) {
                 fileNamesWithSuccess.add(file.getOriginalFilename());
 
                 int length = 10;
@@ -155,7 +156,8 @@ public class AlbumController {
                     String fileName = file.getOriginalFilename();
                     String generatedString = RandomStringUtils.random(length, useLetters, useNumbers);
                     String final_photo_name = generatedString + fileName;
-                    String absolute_fileLocation = AppUtil.get_photo_upload_path(final_photo_name, PHOTOS_FOLDER_NAME, album_id);
+                    String absolute_fileLocation = AppUtil.get_photo_upload_path(final_photo_name, PHOTOS_FOLDER_NAME,
+                            album_id);
                     Path path = Paths.get(absolute_fileLocation);
                     Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                     Photo photo = new Photo();
@@ -168,9 +170,8 @@ public class AlbumController {
                     BufferedImage thumbImg = AppUtil.getThumbnail(file, THUMBNAIL_WIDTH);
                     File thumbnail_location = new File(
                             AppUtil.get_photo_upload_path(final_photo_name, THUMBNAIL_FOLDER_NAME, album_id));
-                    ImageIO.write(thumbImg, file.getContentType().split("/")[1],thumbnail_location);
-                    
-                    
+                    ImageIO.write(thumbImg, file.getContentType().split("/")[1], thumbnail_location);
+
                 } catch (Exception e) {
                     log.debug(AlbumError.PHOTO_UPLOAD_ERROR.toString() + ": " + e.getMessage());
                     fileNamesWithError.add(file.getOriginalFilename());
@@ -183,10 +184,57 @@ public class AlbumController {
         HashMap<String, List<String>> result = new HashMap<>();
         result.put("SUCCESS", fileNamesWithSuccess);
         result.put("ERRORS", fileNamesWithError);
-            
+
         List<HashMap<String, List<String>>> response = new ArrayList<>();
         response.add(result);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("albums/{album_id}/photos/{photo_id}/download-photo")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public ResponseEntity<?> downloadPhoto(@PathVariable("album_id") long album_id,
+            @PathVariable("photo_id") long photo_id, Authentication authentication) {
+           String email = authentication.getName();
+                Optional<Account> optionalAccount = accountService.findByEmail(email);
+                Account account = optionalAccount.get();
+        
+                Optional<Album> optionalAlbum = albumService.findById(album_id);
+                if (optionalAlbum.isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                }
+                Album album;
+                if (optionalAlbum.isPresent()) {
+                    album = optionalAlbum.get();
+                    if (account.getId() != album.getAccount().getId()) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                }
+                Optional<Photo> optionalPhoto = photoService.findById(photo_id);
+                if (optionalPhoto.isPresent()) {
+                    Photo photo = optionalPhoto.get();
+                    Resource resource = null;
+                    try {
+                        resource = AppUtil.getFileAsResource(album_id, PHOTOS_FOLDER_NAME, photo.getFileName());
+                    } catch (IOException e) {
+                        return ResponseEntity.internalServerError().build();
+                    }
+
+                    if (resource == null) {
+                        return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
+                    }
+
+                    String contentType = "application/octet-stream";
+                    String headerValue = "attachment; filename=\"" + photo.getOriginalFileName() + "\"";
+
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.parseMediaType(contentType))
+                            .header(HttpHeaders.CONTENT_DISPOSITION, headerValue)
+                            .body(resource);
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                }
     }
     
 }
