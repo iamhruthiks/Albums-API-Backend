@@ -10,6 +10,7 @@ import com.example.SpringRestDemo.model.Album;
 import com.example.SpringRestDemo.model.Photo;
 import com.example.SpringRestDemo.payload.auth.album.AlbumPayloadDTO;
 import com.example.SpringRestDemo.payload.auth.album.AlbumViewDTO;
+import com.example.SpringRestDemo.payload.auth.album.PhotoDTO;
 import com.example.SpringRestDemo.service.AccountService;
 import com.example.SpringRestDemo.service.AlbumService;
 import com.example.SpringRestDemo.service.PhotoService;
@@ -91,7 +92,7 @@ public class AlbumController {
             Account account = optionalAccount.get();
             album.setAccount(account);
             album = albumService.save(album);
-            AlbumViewDTO albumViewDTO = new AlbumViewDTO(album.getId(), album.getName(), album.getDescription());
+            AlbumViewDTO albumViewDTO = new AlbumViewDTO(album.getId(), album.getName(), album.getDescription(),null);
             return ResponseEntity.ok(albumViewDTO);
 
         } catch (Exception e) {
@@ -111,7 +112,16 @@ public class AlbumController {
         Account account = optionalAccount.get();
         List<AlbumViewDTO> albums = new ArrayList<>();
         for (Album album : albumService.findByAccount_id(account.getId())) {
-            albums.add(new AlbumViewDTO(album.getId(), album.getName(), album.getDescription()));
+
+            List<PhotoDTO> photos = new ArrayList<>();
+            for (Photo photo : photoService.findByAlbumId(album.getId())) {
+                String link = "/albums/" + album.getId() + "/photos/" + photo.getId() + "/download-photo";
+                photos.add(new PhotoDTO(photo.getId(), photo.getName(), photo.getDescription(), photo.getFileName(),
+                        link));
+            }
+            
+            albums.add(new AlbumViewDTO(album.getId(), album.getName(), album.getDescription(), photos));
+
         }
         return albums;
     }

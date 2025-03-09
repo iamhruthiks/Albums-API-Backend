@@ -1,5 +1,7 @@
 package com.example.SpringRestDemo.payload.auth.album;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
@@ -26,4 +28,6 @@ public class AlbumViewDTO {
     @Schema(description = "Description of the album", example = "Description", 
     requiredMode = RequiredMode.REQUIRED)
     private String description;
+
+    private List<PhotoDTO> photos;
 }
