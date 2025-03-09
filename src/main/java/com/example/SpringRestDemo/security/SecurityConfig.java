@@ -73,7 +73,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers("/db-console/**"))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/").permitAll()
+                    .requestMatchers("/**").permitAll()
                     .requestMatchers("/api/v1/auth/token").permitAll()
                     .requestMatchers("/api/v1/auth/users/add").permitAll()
                     .requestMatchers("/api/v1/auth/users").hasAnyAuthority("SCOPE_ADMIN")
