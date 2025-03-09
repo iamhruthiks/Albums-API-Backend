@@ -227,6 +227,9 @@ public class AlbumController {
         Optional<Photo> optionalPhoto = photoService.findById(photo_id);
         if (optionalPhoto.isPresent()) {
             Photo photo = optionalPhoto.get();
+            if (photo.getAlbum().getId() != album_id) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                }
             Resource resource = null;
             try {
                 resource = AppUtil.getFileAsResource(album_id, PHOTOS_FOLDER_NAME, photo.getFileName());
