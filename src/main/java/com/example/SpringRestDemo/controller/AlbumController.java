@@ -3,6 +3,7 @@ package com.example.SpringRestDemo.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.SpringRestDemo.model.Account;
 import com.example.SpringRestDemo.model.Album;
@@ -20,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,11 +33,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 
 
 
 @RestController
-@RequestMapping("/api/v1/album")
+@RequestMapping("/api/v1/albums")
 @Tag(name = "Album Controller", description = "Controller for album and photo management")
 @Slf4j
 public class AlbumController {
@@ -46,7 +49,7 @@ public class AlbumController {
     @Autowired
     private AlbumService albumService;
 
-    @PostMapping(value = "/albums/add", consumes = "application/json", produces = "application/json")
+    @PostMapping(value = "/add", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponse(responseCode = "400", description = "Please add valid name a description")
     @ApiResponse(responseCode = "200", description = "Album added")
@@ -72,12 +75,12 @@ public class AlbumController {
         }
     }
 
-    @GetMapping(value = "/albums", produces = "application/json")
+    @GetMapping(value = "/", produces = "application/json")
     @ApiResponse(responseCode = "400", description = "Please add valid name a description")
-    @ApiResponse(responseCode = "200", description = "Album added")
+    @ApiResponse(responseCode = "200", description = "Albums")
     @Operation(summary = "List album api")
     @SecurityRequirement(name = "springrestful-demo-api")
-    public List<AlbumViewDTO> albums( Authentication authentication) {
+    public List<AlbumViewDTO> albums(Authentication authentication) {
         String email = authentication.getName();
         Optional<Account> optionalAccount = accountService.findByEmail(email);
         Account account = optionalAccount.get();
@@ -87,4 +90,18 @@ public class AlbumController {
         }
         return albums;
     }
+    
+    @PostMapping(value = "/photos", consumes = { "multipart/form-data" })
+    @ApiResponse(responseCode = "400", description = "Please add valid name a description")
+    @ApiResponse(responseCode = "200", description = "Uploaded")
+    @Operation(summary = "Upload Photo into album")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public List<String> photos(@RequestPart(required = true) MultipartFile[] files) {
+        List<String> fileNames = new ArrayList();
+        Arrays.asList(files).stream().forEach(file -> {
+            fileNames.add(file.getOriginalFilename());
+        });
+        return fileNames;
+    }
+    
 }
