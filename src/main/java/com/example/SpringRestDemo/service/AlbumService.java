@@ -23,8 +23,12 @@ public class AlbumService {
         return albumRepository.findByAccount_id(id);
     }
 
-     public Optional<Album> findById(long id) {
+    public Optional<Album> findById(long id) {
         return albumRepository.findById(id);
+    }
+
+    public void deleteAlbum(Album album){
+        albumRepository.delete(album);
     }
 
 }

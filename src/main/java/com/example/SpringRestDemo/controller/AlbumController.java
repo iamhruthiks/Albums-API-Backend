@@ -383,7 +383,52 @@ public class AlbumController {
     @Operation(summary = "delete a photo")
     @SecurityRequirement(name = "springrestful-demo-api")
     public ResponseEntity<String> delete_photo(@PathVariable long album_id, 
-    @PathVariable long photo_id,Authentication authentication) {
+            @PathVariable long photo_id, Authentication authentication) {
+        try {
+
+            String email = authentication.getName();
+            Optional<Account> optionalAccount = accountService.findByEmail(email);
+            Account account = optionalAccount.get();
+
+            Optional<Album> optionaAlbum = albumService.findById(album_id);
+            Album album;
+            if (optionaAlbum.isPresent()) {
+                album = optionaAlbum.get();
+                if (account.getId() != album.getAccount().getId()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+
+            Optional<Photo> optionalPhoto = photoService.findById(photo_id);
+            if (optionalPhoto.isPresent()) {
+                Photo photo = optionalPhoto.get();
+                if (photo.getAlbum().getId() != album_id) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                }
+
+                AppUtil.delete_photo_from_path(photo.getFileName(), PHOTOS_FOLDER_NAME, album_id);
+                AppUtil.delete_photo_from_path(photo.getFileName(), THUMBNAIL_FOLDER_NAME, album_id);
+                photoService.delete(photo);
+
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+    
+    @DeleteMapping(value = "albums/{album_id}/delete")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponse(responseCode = "202", description = "Album deleted")
+    @Operation(summary = "delete a photo")
+    @SecurityRequirement(name = "springrestful-demo-api")
+    public ResponseEntity<String> delete_album(@PathVariable long album_id,Authentication authentication) {
         try {
 
             String email = authentication.getName();
@@ -400,27 +445,21 @@ public class AlbumController {
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
-
-            Optional<Photo> optionalPhoto = photoService.findById(photo_id);
-            if(optionalPhoto.isPresent()){
-                Photo photo = optionalPhoto.get();
-                if (photo.getAlbum().getId() != album_id) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-                }
-                
+           
+            for (Photo photo : photoService.findByAlbumId(album.getId())) {
                 AppUtil.delete_photo_from_path(photo.getFileName(), PHOTOS_FOLDER_NAME, album_id);
                 AppUtil.delete_photo_from_path(photo.getFileName(), THUMBNAIL_FOLDER_NAME, album_id);
                 photoService.delete(photo);
-
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
-            }else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
+            albumService.deleteAlbum(album);
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
+           
 
         } catch (Exception e) {
             
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-    
+
+
 }
