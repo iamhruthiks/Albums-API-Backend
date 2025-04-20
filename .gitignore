@@ -45,3 +45,6 @@ appLog.log
 ### uploads ###
 src/main/resources/static/uploads/**
 
+### secret.properties ###
+src/main/resources/secret.properties
+
