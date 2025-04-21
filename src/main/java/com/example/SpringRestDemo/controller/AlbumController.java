@@ -412,8 +412,8 @@ public class AlbumController {
     }
 
 
-     @GetMapping("albums/{album_id}/photos/{photo_id}/download-photo")
-    @SecurityRequirement(name = "studyeasy-demo-api")
+    @GetMapping("albums/{album_id}/photos/{photo_id}/download-photo")
+    @SecurityRequirement(name = "springrestful-demo-api")
     public ResponseEntity<?> downloadPhoto(@PathVariable("album_id") long album_id,
             @PathVariable("photo_id") long photo_id, Authentication authentication) {
 
@@ -421,7 +421,7 @@ public class AlbumController {
     }
 
     @GetMapping("albums/{album_id}/photos/{photo_id}/download-thumbnail")
-    @SecurityRequirement(name = "studyeasy-demo-api")
+    @SecurityRequirement(name = "springrestful-demo-api")
     public ResponseEntity<?> downloadThumbnail(@PathVariable("album_id") long album_id,
             @PathVariable("photo_id") long photo_id, Authentication authentication) {
 
